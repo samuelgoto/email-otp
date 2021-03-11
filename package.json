@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha -w tests"
+    "test": "mocha -w tests",
+    "build": "browserify --s module src/index.js -o docs/email.js"
   },
   "repository": {
     "type": "git",
