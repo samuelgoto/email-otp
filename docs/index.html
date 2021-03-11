@@ -1,0 +1,36 @@
+<html>
+  <head>
+    <script src="email.js"></script>
+  </head>
+  <body>
+    <br><textarea id="public" rows="10" cols="80"></textarea>
+    <br><textarea id="private" rows="10" cols="80"></textarea>
+    <br><textarea id="token" rows="10" cols="80"></textarea>
+    <br><textarea id="decoded" rows="10" cols="80"></textarea>
+    <br><textarea id="verified" rows="10" cols="80"></textarea>
+    
+    <script>
+      const {JWT} = module;
+
+      function log(key, value) {
+        document.getElementById(key).value = value;
+      }
+      
+      const jwt = new JWT({
+        issuer: "https://idp.example",
+        audience: "https://rp.example",
+        subject: "user@email.example",        
+      });
+
+      log("public", jwt.keypair["public"]);
+      log("private", jwt.keypair["private"]);
+
+      const token = jwt.sign({
+        "hello": "world"
+      });
+      log("token", token);
+      log("decoded", JSON.stringify(jwt.decode(token), undefined, 2));
+      log("verified", JSON.stringify(jwt.verify(token), undefined, 2));
+    </script>
+  </body>
+</html>
