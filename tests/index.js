@@ -1,8 +1,15 @@
 const assert = require("assert");
 const {JWT} = require("../src/index.js");
+const {default: generateKeyPair } = require("jose/util/generate_key_pair");
+
 
 describe("Index", function() {
   it("Sign and Verify", async () => {
+    //const {publicKey, privateKey} = await generateKeyPair("RS256");
+    //console.log(publicKey);
+    //console.log(privateKey);
+    //return;
+    
     const jwt = new JWT({
       issuer: "https://idp.example",
       subject: "user@email.example",
@@ -19,6 +26,9 @@ describe("Index", function() {
       "picture": "https://idp.example/1234.jpg",
     });
 
+    const decoded = jwt.decode(token);
+    // console.log(decoded);
+    
     const result = jwt.verify(token);
   });
 });

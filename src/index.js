@@ -1,5 +1,6 @@
 const keypair = require("keypair");
-const jwt  = require('jsonwebtoken');
+const jwt  = require("jsonwebtoken");
+const jws = require("jws");
 
 class JWT {
   constructor({issuer, audience, subject}) {
@@ -18,7 +19,11 @@ class JWT {
       algorithm:  "RS256"
     });
   }
-  
+
+  decode(token) {
+    return jws.decode(token, {});
+  }
+      
   verify(token) {
     return jwt.verify(token, this.keypair["public"], {
       issuer:  this.issuer,
