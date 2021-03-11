@@ -17,7 +17,9 @@
   },
   "homepage": "https://github.com/samuelgoto/email#readme",
   "dependencies": {
-    "jose": "^3.7.0"
+    "jose": "^3.7.0",
+    "jsonwebtoken": "^8.5.1",
+    "keypair": "^1.0.2"
   },
   "devDependencies": {
     "mocha": "^8.3.1"
