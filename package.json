@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/samuelgoto/email/issues"
   },
-  "homepage": "https://github.com/samuelgoto/email#readme"
+  "homepage": "https://github.com/samuelgoto/email#readme",
+  "dependencies": {
+    "jose": "^3.7.0"
+  }
 }
