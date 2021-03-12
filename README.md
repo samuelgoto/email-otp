@@ -177,3 +177,14 @@ This extension is notably more complicated for browsers and email vendors to imp
 Because there are few email providers and even fewer browser vendors, it seems like the right place to push complexity to, if it leads to higher conversion rates to a large user base.
 
 Importantly, because it can be used **in addition to** the baseline (which, in an on itself is also **additive to** the status quo), this extension could be used by sophisticated email providers and ignored by smaller ones.
+
+# Alternatives Under Consideration
+
+I think there are a couple of reasonable alternatives to consider:
+
+1. openid/oauth
+1. redirects
+
+OpenID/OAuth seems like a plausible mechanism, but doesn't seem like a norm to verify email addresses. There is a chance that has to do with the fact that you'd have to set up client_id with every single email provider in the world, which is clearly not plausible.
+
+Redirects could work too, without any browser intermediation, but also is clearly not a norm to verify email addresses. There is a chance that has to do with the fact that (a) there isn't such a convention, (b) redirects leak the calling website or (c) incentives aren't aligned. The first two seem fixable and the third existential to any other mechanism, so we'll need to dig deeper and investigate this alternative.
