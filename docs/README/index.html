@@ -4,7 +4,12 @@
 <h1>Why?</h1>
 <p>Email verification is a ceremony that websites use to establish ownership of (or access to) a certain email address, typically used as a form of identification at account registration (in combination with passwords) and recovery (e.g. when you forget your password).</p>
 <p>The current norm is, upon acquisition of the user's email (e.g. via a <code>&lt;input type=&quot;email&quot;&gt;</code> form), for the website to send an email with an unguessable one-time code (e.g. typically 4-6 characters, sometimes embedded in a clickable link). The user is directed to access their email inbox (typically a native app or a web app), gather that one-time code and return it back to the website to prove access (and hence ownership) of the email address.</p>
-<p>This process is done largely manually (e.g. manually switching tabs between website and email service/app, copying/pasting codes or clicking on links), and hence high friction and prone to phishing.</p>
+<p>This process is done largely manually (e.g. manually switching tabs between website and email service/app, copying/pasting codes or clicking on links), and hence:</p>
+<ul>
+<li>high friction (say, in the order of minutes) and</li>
+<li>prone to phishing (<a href="https://www.comparitech.com/blog/information-security/account-validation-phishing-scams/">example</a>).</li>
+</ul>
+<p>In this explainer, we'll look at a few alternatives to address these problems.</p>
 <p>We'll make two (big but useful) assumptions going forward:</p>
 <ul>
 <li>that the email has already been previously acquired by the website and</li>
