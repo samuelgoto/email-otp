@@ -2,6 +2,12 @@ const keypair = require("keypair");
 const jwt  = require("jsonwebtoken");
 const jws = require("jws");
 
+class Email {
+  verify(email, otp) {
+    
+  }
+}
+
 class JWT {
   constructor({issuer, audience, subject}) {
     this.keypair = keypair({bits: 512});
