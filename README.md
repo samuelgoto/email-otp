@@ -35,10 +35,10 @@ navigator.credentials.get({
 });
 ```
 
-It then, as usual, sends an email to the email provider, **but** with an extra bit of agreed upon convention. It is unclear exactly what that convention is, but just as a starting point, take something as simple as a reserved email header formatted in a specific way (the following takes inspiration from the [convention](https://github.com/WICG/sms-one-time-codes) used in SMS):
+It then, as usual, sends an email to the email provider, **but** with an extra bit of agreed upon convention. It is unclear exactly what that convention is, but just as a starting point, take something as simple as a reserved email header (say, `X-OTP`) formatted in a specific way (the following takes inspiration from the [convention](https://github.com/WICG/sms-one-time-codes) used in SMS):
 
 ```
-X-Email-OTP: @example.com #1234
+X-OTP: @example.com #1234
 ```
 
 For example:
@@ -49,7 +49,7 @@ Content-Type:  multipart/mixed;  boundary=frontier
 From: Relying Party <no-reply@rp.com>
 To: user@email.com
 Subject: Verify Email Address
-X-Email-OTP: @example.com #1234
+X-OTP: @example.com #1234
 ...
 ```
 
@@ -184,7 +184,11 @@ I think there are a couple of reasonable alternatives to consider:
 
 1. openid/oauth
 1. redirects
+1. iframes
+
 
 OpenID/OAuth seems like a plausible mechanism, but doesn't seem like a norm to verify email addresses. There is a chance that has to do with the fact that you'd have to set up client_id with every single email provider in the world, which is clearly not plausible.
 
 Redirects could work too, without any browser intermediation, but also is clearly not a norm to verify email addresses. There is a chance that has to do with the fact that (a) there isn't such a convention, (b) redirects leak the calling website or (c) incentives aren't aligned. The first two seem fixable and the third existential to any other mechanism, so we'll need to dig deeper and investigate this alternative.
+
+Similarly to redirects, email providers could expose iframe widgets and a postMessage protocol to do email verification. It seems isomorphic to the alternative above, so we'll consider that together (but just note here for completion).

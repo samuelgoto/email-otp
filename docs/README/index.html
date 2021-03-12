@@ -16,8 +16,8 @@
 <pre class="language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">autocomplete</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>one-time-code<span class="token punctuation">"</span></span><span class="token punctuation">></span></span></code></pre>
 <p>Or imperatively:</p>
 <pre class="language-javascript"><code class="language-javascript">navigator<span class="token punctuation">.</span>credentials<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">{</span><br>  otp<span class="token operator">:</span> <span class="token punctuation">{</span> transport<span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"email"</span><span class="token punctuation">]</span> <span class="token punctuation">}</span><br><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
-<p>It then, as usual, sends an email to the email provider, <strong>but</strong> with an extra bit of agreed upon convention. It is unclear exactly what that convention is, but just as a starting point, take something as simple as a reserved email header formatted in a specific way (the following takes inspiration from the <a href="https://github.com/WICG/sms-one-time-codes">convention</a> used in SMS):</p>
-<pre><code>X-Email-OTP: @example.com #1234
+<p>It then, as usual, sends an email to the email provider, <strong>but</strong> with an extra bit of agreed upon convention. It is unclear exactly what that convention is, but just as a starting point, take something as simple as a reserved email header (say, <code>X-OTP</code>) formatted in a specific way (the following takes inspiration from the <a href="https://github.com/WICG/sms-one-time-codes">convention</a> used in SMS):</p>
+<pre><code>X-OTP: @example.com #1234
 </code></pre>
 <p>For example:</p>
 <pre><code>MIME-Version: 1.0
@@ -25,7 +25,7 @@ Content-Type:  multipart/mixed;  boundary=frontier
 From: Relying Party &lt;no-reply@rp.com&gt;
 To: user@email.com
 Subject: Verify Email Address
-X-Email-OTP: @example.com #1234
+X-OTP: @example.com #1234
 ...
 </code></pre>
 <p>This special convention instructs the cooperative email client to inform (with the user's agreement) the browser of its arrival.</p>
@@ -81,6 +81,8 @@ X-Email-OTP: @example.com #1234
 <ol>
 <li>openid/oauth</li>
 <li>redirects</li>
+<li>iframes</li>
 </ol>
 <p>OpenID/OAuth seems like a plausible mechanism, but doesn't seem like a norm to verify email addresses. There is a chance that has to do with the fact that you'd have to set up client_id with every single email provider in the world, which is clearly not plausible.</p>
 <p>Redirects could work too, without any browser intermediation, but also is clearly not a norm to verify email addresses. There is a chance that has to do with the fact that (a) there isn't such a convention, (b) redirects leak the calling website or (c) incentives aren't aligned. The first two seem fixable and the third existential to any other mechanism, so we'll need to dig deeper and investigate this alternative.</p>
+<p>Similarly to redirects, email providers could expose iframe widgets and a postMessage protocol to do email verification. It seems isomorphic to the alternative above, so we'll consider that together (but just note here for completion).</p>
