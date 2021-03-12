@@ -1,21 +1,26 @@
 <h1>Email OTPs</h1>
-<p>This is an <strong>early</strong> exporation of mechanisms to facilitade the verification of email addresses on the Web.</p>
+<p>This is an <strong>early</strong> exporation of mechanisms that browsers could expose to facilitade the verification of email addresses on the Web.</p>
 <p>It is largely based on the somewhat analogous mechanisms explored in origin-bound <a href="https://github.com/WICG/sms-one-time-codes">SMS OTPs</a> and <a href="https://github.com/WICG/web-otp">WebOTP</a>.</p>
+<h1>Why?</h1>
+<p>Email verification is a ceremony that websites use to establish ownership of (or access to) a certain email address, typically used as a form of identification at account registration (in combination with passwords) and recovery (e.g. when you forget your password).</p>
+<p>The current norm is, upon acquisition of the user's email (e.g. via a <code>&lt;input type=&quot;email&quot;&gt;</code> form), for the website to send an email with an unguessable one-time code (e.g. typically 4-6 characters, sometimes embedded in a clickable link). The user is directed to access their email inbox (typically a native app or a web app), gather that one-time code and return it back to the website to prove access (and hence ownership) of the email address.</p>
+<p>This process is done largely manually (e.g. manually switching tabs between website and email service/app, copying/pasting codes or clicking on links), and hence high friction and prone to phishing.</p>
+<p>We'll make two (big but useful) assumptions going forward:</p>
+<ul>
+<li>that the email has already been previously acquired by the website and</li>
+<li>that the incentives are aligned for a cooperative relationship between email services and websites.</li>
+</ul>
 <h1>A Baseline</h1>
-<p>As starting point, we are imagining that there is maybe a convention that websites could use cooperatively with email providers to facilitate the verification of email addresses (note, we make two big assumptions here: (a) that the email has already been previously acquired by the website and (b) that the incentives are aligned for a cooperative relationship).</p>
-<p>In the first pass, a website uses a newly exposed browser API to declare that it is expecting an email OTP:</p>
-<pre><code class="language-html">&lt;input autocomplete=&quot;one-time-code&quot;&gt;
-</code></pre>
+<p>In this baseline formulation we derive the most basic convention that websites could use cooperatively with email providers to facilitate the verification of email addresses through a modified browser.</p>
+<p>In this two part convention, a website uses a newly exposed browser API to declare that it is interested in an email OTP:</p>
+<pre class="language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span> <span class="token attr-name">autocomplete</span><span class="token attr-value"><span class="token punctuation attr-equals">=</span><span class="token punctuation">"</span>one-time-code<span class="token punctuation">"</span></span><span class="token punctuation">></span></span></code></pre>
 <p>Or imperatively:</p>
-<pre><code class="language-javascript">navigator.credentials.get({
-  otp: { transport: [&quot;email&quot;] }
-});
-</code></pre>
-<p>It then sends an email to the email provider with an agreed upon convention. It is unclear exactly what that convention is, but just as a starting point, take something as simple as a reserved email header:</p>
+<pre class="language-javascript"><code class="language-javascript">navigator<span class="token punctuation">.</span>credentials<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">{</span><br>  otp<span class="token operator">:</span> <span class="token punctuation">{</span> transport<span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"email"</span><span class="token punctuation">]</span> <span class="token punctuation">}</span><br><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>It then, as usual, sends an email to the email provider, <strong>but</strong> with an extra bit of agreed upon convention. It is unclear exactly what that convention is, but just as a starting point, take something as simple as a reserved email header formatted in a specific way (the following takes inspiration from the <a href="https://github.com/WICG/sms-one-time-codes">convention</a> used in SMS):</p>
 <pre><code>X-Email-OTP: @example.com #1234
 </code></pre>
 <p>For example:</p>
-<pre><code class="language-mime">MIME-Version: 1.0
+<pre><code>MIME-Version: 1.0
 Content-Type:  multipart/mixed;  boundary=frontier
 From: Relying Party &lt;no-reply@rp.com&gt;
 To: user@email.com
@@ -24,17 +29,11 @@ X-Email-OTP: @example.com #1234
 ...
 </code></pre>
 <p>This special convention instructs the cooperative email client to inform (with the user's agreement) the browser of its arrival.</p>
-<p>For native email clients (e.g. android/ios apps), the mechanism to inform the browser will probably vary from browser to browser.</p>
-<p>For web email clients, however, we could probably expose a Web API that allows the email client to inform the browser of the arrival. For example:</p>
-<pre><code class="language-javascript">navigator.credentials.store({
-  otp: {
-    audience: &quot;https://example.com&quot;,
-    transport: &quot;email&quot;,
-    value: &quot;1234&quot;
-  }
-});
-</code></pre>
-<p>One of the key benefits about this baseline is that it is imposes no changes in user behavior, fitting complementary with the existing norms for email verification. By that we mean that it is strictly additive: it degrades gracefully to the current norm when it isn't available / fails (e.g. the email header is invisible) but offers an uplift in conversion rates when it succeeds (e.g. automates part of the flow that is done manually).</p>
+<p>For native email clients (e.g. android/ios apps), the mechanism to inform the browser will probably vary from browser to browser (e.g. android intents).</p>
+<p>For web email clients, however, a browser could probably expose a Web API that allows the email client to inform the browser of the arrival. For example:</p>
+<pre class="language-javascript"><code class="language-javascript">navigator<span class="token punctuation">.</span>credentials<span class="token punctuation">.</span><span class="token function">store</span><span class="token punctuation">(</span><span class="token punctuation">{</span><br>  otp<span class="token operator">:</span> <span class="token punctuation">{</span><br>    audience<span class="token operator">:</span> <span class="token string">"https://example.com"</span><span class="token punctuation">,</span><br>    transport<span class="token operator">:</span> <span class="token string">"email"</span><span class="token punctuation">,</span><br>    value<span class="token operator">:</span> <span class="token string">"1234"</span><br>  <span class="token punctuation">}</span><br><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
+<p>When a browser receives a <code>navigator.credentials.store</code> call, it sees if there is any matching <code>navigator.credentials.get</code> and prompts the user for a permission to intermediate the email verification.</p>
+<p>One of the key benefits about this baseline is that it is imposes no changes in user behavior, fitting complementary with the existing norms for email verification. By that we mean that it is strictly additive: it degrades gracefully to the current norm (e.g. the email header is invisible so it is never seem) when it isn't available / fails (e.g. when either the browser or the email service doesn't support that affordance) but offers an uplift in conversion rates when it succeeds (e.g. automates part of the flow that is done manually).</p>
 <h1>An Extension</h1>
 <p>One of the clear problems with this baseline is that it still relies on email delivery to perform email verification. That's clearly a problem because:</p>
 <ul>
@@ -50,67 +49,30 @@ X-Email-OTP: @example.com #1234
 <li>a non-guessable nonce</li>
 </ul>
 <p>For example:</p>
-<pre><code class="language-javascript">navigator.credentials.get({
-  otp: {
-    transport: [&quot;email&quot;],
-    email: &quot;user@email.com&quot;,
-    nonce: &quot;123&quot;
-  }
-});
-</code></pre>
+<pre class="language-javascript"><code class="language-javascript">navigator<span class="token punctuation">.</span>credentials<span class="token punctuation">.</span><span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">{</span><br>  otp<span class="token operator">:</span> <span class="token punctuation">{</span><br>    <span class="token string">"transport"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"email"</span><span class="token punctuation">]</span><span class="token punctuation">,</span><br>    <span class="token string">"email"</span><span class="token operator">:</span> <span class="token string">"user@email.com"</span><span class="token punctuation">,</span><br>    <span class="token string">"nonce"</span><span class="token operator">:</span> <span class="token string">"123"</span><br>  <span class="token punctuation">}</span><br><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre>
 <p>The browser would then reach out to the email provider to check if:</p>
 <ul>
 <li>the user is logged in and the email to be verified matches the logged in user</li>
 <li>it supports a faster way to make email verification.</li>
 </ul>
 <p>It is unclear exactly how that would be done, but just a starting point, lets pretend, by convention, there would be a credentialed .well-known file somewhere that email providers expose:</p>
-<pre><code class="language-http">GET /.well-known/email-otp.json HTTP/1.1
-Host: email.com
-Cookie: 123
-</code></pre>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token property">GET</span> /.well-known/email-otp.json HTTP/1.1</span><br><span class="token header-name keyword">Host:</span> email.com<br><span class="token header-name keyword">Cookie:</span> 123</code></pre>
 <p>With the <code>cookie</code> that is passed, the session is established, and if there is a valid user at the other end it responds to the browser:</p>
-<pre><code class="language-http">HTTP/1.1 200 OK
-Date: Mon, 27 Jul 2009 12:28:53 GMT
-Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT
-Content-Length: 88
-Content-Type: text/json
-{
-  email: &quot;user@email.com&quot;,
-  verification: &quot;/verify.php&quot;
-}
-</code></pre>
+<pre class="language-http"><code class="language-http"><span class="token response-status">HTTP/1.1 <span class="token property">200 OK</span></span><br><span class="token header-name keyword">Date:</span> Mon, 27 Jul 2009 12:28:53 GMT<br><span class="token header-name keyword">Last-Modified:</span> Wed, 22 Jul 2009 19:15:56 GMT<br><span class="token header-name keyword">Content-Length:</span> 88<br><span class="token header-name keyword">Content-Type:</span> text/json<br>{<br>  "email": "user@email.com",<br>  "verification": "/verify.php"<br>}</code></pre>
 <p>If a matching email user is available and it affords to be verified, the browser gets the user permission and makes a POST request to the verification endpoint with the <strong>nonce</strong> as a parameter:</p>
-<pre><code class="language-http">POST /verify.php HTTP/1.1
-Host: email.com
-Content-Type: application/x-www-form-urlencoded
-Cookie: 123
-nonce=123
-</code></pre>
+<pre class="language-http"><code class="language-http"><span class="token request-line"><span class="token property">POST</span> /verify.php HTTP/1.1</span><br><span class="token header-name keyword">Host:</span> email.com<br><span class="token header-name keyword">Content-Type:</span> application/x-www-form-urlencoded<br><span class="token header-name keyword">Cookie:</span> 123<br>nonce=123</code></pre>
 <p>The email service then mints and signs a token that proves to the website that the current user (identified by the cookie) actually does own the email in question.</p>
 <p>It is unclear exactly how that would be done, but just as a starting point, take something like a JWT:</p>
-<pre><code class="language-http">HTTP/1.1 200 OK
-Date: Mon, 27 Jul 2009 12:28:53 GMT
-Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT
-Content-Length: 88
-Content-Type: application/jwt
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWRpZW5jZSI6IjEyMzQiLCJlbWFpbCI6InVzZXJAZW1haWwuY29tIiwiZXhwIjoxNTE2MjM5MDIyLCJpYXQiOjE1MTYyMzkwMjJ9.6AZ4WxvdJvjU8LtOxRoH33F4gEV-MwosvoyRADXhiyM
-</code></pre>
-<p>This is a base64 encoded signed token. The payload binds the email address to the specific &quot;nonce&quot; passed initially for a short period of time (e.g. sets expiration times).</p>
-<pre><code class="language-json">{
-  &quot;iss&quot;: &quot;https://email.com&quot;,
-  &quot;aud&quot;: &quot;1234&quot;,
-  &quot;sub&quot;: &quot;user@email.com&quot;,
-  &quot;exp&quot;: 1516239022,
-  &quot;iat&quot;: 1516239022
-}
-</code></pre>
+<pre class="language-http"><code class="language-http"><span class="token response-status">HTTP/1.1 <span class="token property">200 OK</span></span><br><span class="token header-name keyword">Date:</span> Mon, 27 Jul 2009 12:28:53 GMT<br><span class="token header-name keyword">Last-Modified:</span> Wed, 22 Jul 2009 19:15:56 GMT<br><span class="token header-name keyword">Content-Length:</span> 88<br><span class="token header-name keyword">Content-Type:</span> application/jwt<br>HEADER.PAYLOAD.SIGNATURE</code></pre>
+<p>This is a base64 encoded and signed token. The payload binds the email address to the specific &quot;one-time nonce&quot; passed initially (e.g. so that it cannot be replayed) for a short period of time (e.g. sets expiration times).</p>
+<pre class="language-json"><code class="language-json"><span class="token punctuation">{</span><br>  <span class="token property">"iss"</span><span class="token operator">:</span> <span class="token string">"https://email.com"</span><span class="token punctuation">,</span><br>  <span class="token property">"aud"</span><span class="token operator">:</span> <span class="token string">"1234"</span><span class="token punctuation">,</span><br>  <span class="token property">"sub"</span><span class="token operator">:</span> <span class="token string">"user@email.com"</span><span class="token punctuation">,</span><br>  <span class="token property">"exp"</span><span class="token operator">:</span> <span class="token number">1516239022</span><span class="token punctuation">,</span><br>  <span class="token property">"iat"</span><span class="token operator">:</span> <span class="token number">1516239022</span><br><span class="token punctuation">}</span></code></pre>
 <p>The browser would take this base64 encoded JWT and pass it back as a result to the <code>navigator.credentials.get()</code> call.</p>
 <p>In possession of the JWT, the website can use the existing JWT conventions for checking its validity and provenance (e.g. getting public keys from the <a href="https://tools.ietf.org/html/rfc7517">JWKS</a> <code>/.well-known/jwks.json</code>), and hence the proof of the user's possession of the email address.</p>
 <p>This extension is notably more complicated for browsers and email vendors to implement, but is notably:</p>
 <ul>
-<li>faster and more reliable than the baseline and, importantly,</li>
-<li>backwards compatible with user norms like the baseline</li>
-<li>not-mutually exclusive to the baseline</li>
+<li>faster and more reliable than the baseline,</li>
+<li>backwards compatible with user norms like the baseline and, importantly,</li>
+<li>not-mutually exclusive with the baseline</li>
 </ul>
 <p>Because there are few email providers and even fewer browser vendors, it seems like the right place to push complexity to, if it leads to higher conversion rates to a large user base.</p>
 <p>Importantly, because it can be used <strong>in addition to</strong> the baseline (which, in an on itself is also <strong>additive to</strong> the status quo), this extension could be used by sophisticated email providers and ignored by smaller ones.</p>

@@ -1,14 +1,27 @@
 # Email OTPs
 
-This is an **early** exporation of mechanisms to facilitade the verification of email addresses on the Web.
+This is an **early** exporation of mechanisms that browsers could expose to facilitade the verification of email addresses on the Web.
 
 It is largely based on the somewhat analogous mechanisms explored in origin-bound [SMS OTPs](https://github.com/WICG/sms-one-time-codes) and [WebOTP](https://github.com/WICG/web-otp).
 
+# Why?
+
+Email verification is a ceremony that websites use to establish ownership of (or access to) a certain email address, typically used as a form of identification at account registration (in combination with passwords) and recovery (e.g. when you forget your password). 
+
+The current norm is, upon acquisition of the user's email (e.g. via a `<input type="email">` form), for the website to send an email with an unguessable one-time code (e.g. typically 4-6 characters, sometimes embedded in a clickable link). The user is directed to access their email inbox (typically a native app or a web app), gather that one-time code and return it back to the website to prove access (and hence ownership) of the email address.
+
+This process is done largely manually (e.g. manually switching tabs between website and email service/app, copying/pasting codes or clicking on links), and hence high friction and prone to phishing.
+
+We'll make two (big but useful) assumptions going forward:
+
+- that the email has already been previously acquired by the website and
+- that the incentives are aligned for a cooperative relationship between email services and websites.
+
 # A Baseline
 
-As starting point, we are imagining that there is maybe a convention that websites could use cooperatively with email providers to facilitate the verification of email addresses (note, we make two big assumptions here: (a) that the email has already been previously acquired by the website and (b) that the incentives are aligned for a cooperative relationship).
+In this baseline formulation we derive the most basic convention that websites could use cooperatively with email providers to facilitate the verification of email addresses through a modified browser.
 
-In the first pass, a website uses a newly exposed browser API to declare that it is expecting an email OTP: 
+In this two part convention, a website uses a newly exposed browser API to declare that it is interested in an email OTP: 
 
 ```html
 <input autocomplete="one-time-code">
@@ -22,7 +35,7 @@ navigator.credentials.get({
 });
 ```
 
-It then sends an email to the email provider with an agreed upon convention. It is unclear exactly what that convention is, but just as a starting point, take something as simple as a reserved email header:
+It then, as usual, sends an email to the email provider, **but** with an extra bit of agreed upon convention. It is unclear exactly what that convention is, but just as a starting point, take something as simple as a reserved email header formatted in a specific way (the following takes inspiration from the [convention](https://github.com/WICG/sms-one-time-codes) used in SMS):
 
 ```
 X-Email-OTP: @example.com #1234
@@ -30,7 +43,7 @@ X-Email-OTP: @example.com #1234
 
 For example:
 
-```mime
+```
 MIME-Version: 1.0
 Content-Type:  multipart/mixed;  boundary=frontier
 From: Relying Party <no-reply@rp.com>
@@ -42,9 +55,9 @@ X-Email-OTP: @example.com #1234
 
 This special convention instructs the cooperative email client to inform (with the user's agreement) the browser of its arrival.
 
-For native email clients (e.g. android/ios apps), the mechanism to inform the browser will probably vary from browser to browser.
+For native email clients (e.g. android/ios apps), the mechanism to inform the browser will probably vary from browser to browser (e.g. android intents).
 
-For web email clients, however, we could probably expose a Web API that allows the email client to inform the browser of the arrival. For example: 
+For web email clients, however, a browser could probably expose a Web API that allows the email client to inform the browser of the arrival. For example: 
 
 ```javascript
 navigator.credentials.store({
@@ -56,7 +69,9 @@ navigator.credentials.store({
 });
 ```
 
-One of the key benefits about this baseline is that it is imposes no changes in user behavior, fitting complementary with the existing norms for email verification. By that we mean that it is strictly additive: it degrades gracefully to the current norm when it isn't available / fails (e.g. the email header is invisible) but offers an uplift in conversion rates when it succeeds (e.g. automates part of the flow that is done manually).
+When a browser receives a `navigator.credentials.store` call, it sees if there is any matching `navigator.credentials.get` and prompts the user for a permission to intermediate the email verification.
+
+One of the key benefits about this baseline is that it is imposes no changes in user behavior, fitting complementary with the existing norms for email verification. By that we mean that it is strictly additive: it degrades gracefully to the current norm (e.g. the email header is invisible so it is never seem) when it isn't available / fails (e.g. when either the browser or the email service doesn't support that affordance) but offers an uplift in conversion rates when it succeeds (e.g. automates part of the flow that is done manually).
 
 # An Extension
 
@@ -80,9 +95,9 @@ For example:
 ```javascript
 navigator.credentials.get({
   otp: {
-    transport: ["email"],
-    email: "user@email.com",
-    nonce: "123"
+    "transport": ["email"],
+    "email": "user@email.com",
+    "nonce": "123"
   }
 });
 ```
@@ -109,8 +124,8 @@ Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT
 Content-Length: 88
 Content-Type: text/json
 {
-  email: "user@email.com",
-  verification: "/verify.php"
+  "email": "user@email.com",
+  "verification": "/verify.php"
 }
 ```
 
@@ -134,10 +149,10 @@ Date: Mon, 27 Jul 2009 12:28:53 GMT
 Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT
 Content-Length: 88
 Content-Type: application/jwt
-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWRpZW5jZSI6IjEyMzQiLCJlbWFpbCI6InVzZXJAZW1haWwuY29tIiwiZXhwIjoxNTE2MjM5MDIyLCJpYXQiOjE1MTYyMzkwMjJ9.6AZ4WxvdJvjU8LtOxRoH33F4gEV-MwosvoyRADXhiyM
+HEADER.PAYLOAD.SIGNATURE
 ```
 
-This is a base64 encoded signed token. The payload binds the email address to the specific "nonce" passed initially for a short period of time (e.g. sets expiration times).
+This is a base64 encoded and signed token. The payload binds the email address to the specific "one-time nonce" passed initially (e.g. so that it cannot be replayed) for a short period of time (e.g. sets expiration times).
 
 ```json
 {
@@ -155,9 +170,9 @@ In possession of the JWT, the website can use the existing JWT conventions for c
 
 This extension is notably more complicated for browsers and email vendors to implement, but is notably:
 
-- faster and more reliable than the baseline and, importantly,
-- backwards compatible with user norms like the baseline
-- not-mutually exclusive to the baseline
+- faster and more reliable than the baseline,
+- backwards compatible with user norms like the baseline and, importantly,
+- not-mutually exclusive with the baseline
 
 Because there are few email providers and even fewer browser vendors, it seems like the right place to push complexity to, if it leads to higher conversion rates to a large user base.
 

@@ -23,6 +23,7 @@
     "keypair": "^1.0.2"
   },
   "devDependencies": {
+    "@11ty/eleventy-plugin-syntaxhighlight": "^3.1.0",
     "mocha": "^8.3.1"
   }
 }
